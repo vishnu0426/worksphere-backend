@@ -7,7 +7,7 @@ import asyncpg
 import sys
 
 # Database URL
-DATABASE_URL = "postgresql://postgres:Admin@localhost:5432/agno_worksphere"
+DATABASE_URL = "postgresql://postgres:Admin@192.168.9.119:5432/agno_worksphere"
 
 async def test_assignable_members():
     """Test the assignable members functionality"""

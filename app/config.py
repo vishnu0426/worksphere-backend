@@ -18,7 +18,7 @@ class Settings:
         self.database_url = os.getenv("DATABASE_URL")
         if not self.database_url:
             raise RuntimeError("DATABASE_URL must be set")
-        self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        self.redis_url = os.getenv("REDIS_URL", "redis://192.168.9.119:6379")
 
         # Database Connection Pool Settings
         self.db_pool_min_size = int(os.getenv("DB_POOL_MIN_SIZE", "10"))
@@ -49,7 +49,7 @@ class Settings:
                 raise RuntimeError("ALLOWED_ORIGINS must be set in production (comma-separated HTTPS URLs)")
             else:
                 # Default dev origins - include all common development ports
-                origins_str = "http://localhost:3000,http://localhost:3001,http://localhost:3000,http://localhost:3003,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3000,http://127.0.0.1:3003,http://localhost:3000,http://localhost:3001,http://localhost:3000,http://localhost:3003"
+                origins_str = "http://192.168.9.119:3000,http://192.168.9.119:3001,http://192.168.9.119:3000,http://192.168.9.119:3003,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3000,http://127.0.0.1:3003,http://192.168.9.119:3000,http://192.168.9.119:3001,http://192.168.9.119:3000,http://192.168.9.119:3003"
 
         self.allowed_origins = [origin.strip() for origin in origins_str.split(',') if origin.strip()]
 

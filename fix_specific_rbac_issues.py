@@ -88,7 +88,7 @@ async def test_admin_project_creation():
             "password": "TestAdmin123!"
         }
         
-        response = requests.post("http://localhost:8000/api/v1/auth/login", json=admin_login, timeout=10)
+        response = requests.post("http://192.168.9.119:8000/api/v1/auth/login", json=admin_login, timeout=10)
         if response.status_code != 200:
             print(f"   ❌ Admin login failed: {response.status_code}")
             return False
@@ -113,7 +113,7 @@ async def test_admin_project_creation():
         
         # Add organization_id as query parameter (as expected by the endpoint)
         response = requests.post(
-            f"http://localhost:8000/api/v1/projects?organization_id={org_id}",
+            f"http://192.168.9.119:8000/api/v1/projects?organization_id={org_id}",
             json=project_data,
             headers=headers,
             timeout=10
@@ -147,7 +147,7 @@ async def test_member_organization_creation():
             "password": "TestMember123!"
         }
         
-        response = requests.post("http://localhost:8000/api/v1/auth/login", json=member_login, timeout=10)
+        response = requests.post("http://192.168.9.119:8000/api/v1/auth/login", json=member_login, timeout=10)
         if response.status_code != 200:
             print(f"   ❌ Member login failed: {response.status_code}")
             return False
@@ -163,7 +163,7 @@ async def test_member_organization_creation():
         }
         
         response = requests.post(
-            "http://localhost:8000/api/v1/organizations",
+            "http://192.168.9.119:8000/api/v1/organizations",
             json=org_data,
             headers=headers,
             timeout=10

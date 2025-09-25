@@ -17,7 +17,7 @@ def test_frontend_integration():
     try:
         # Step 1: Login and get session token
         print("🔐 Step 1: Testing login...")
-        login_response = requests.post('http://localhost:8000/api/v1/auth/login', 
+        login_response = requests.post('http://192.168.9.119:8000/api/v1/auth/login', 
                                      json=login_data)
         
         if login_response.status_code != 200:
@@ -40,7 +40,7 @@ def test_frontend_integration():
         
         # Step 2: Get project structure
         print("\n📁 Step 2: Getting project structure...")
-        projects_response = requests.get('http://localhost:8000/api/v1/projects/', headers=headers)
+        projects_response = requests.get('http://192.168.9.119:8000/api/v1/projects/', headers=headers)
         
         if projects_response.status_code != 200:
             print(f"❌ Failed to get projects: {projects_response.status_code}")
@@ -57,7 +57,7 @@ def test_frontend_integration():
         
         # Step 3: Get board structure
         print("\n📋 Step 3: Getting board structure...")
-        boards_response = requests.get(f'http://localhost:8000/api/v1/projects/{project_id}/boards', headers=headers)
+        boards_response = requests.get(f'http://192.168.9.119:8000/api/v1/projects/{project_id}/boards', headers=headers)
         
         if boards_response.status_code != 200:
             print(f"❌ Failed to get boards: {boards_response.status_code}")
@@ -74,7 +74,7 @@ def test_frontend_integration():
         
         # Step 4: Get columns (this is what the dropdown should show)
         print("\n📊 Step 4: Testing column dropdown data...")
-        columns_response = requests.get(f'http://localhost:8000/api/v1/boards/{board_id}/columns', headers=headers)
+        columns_response = requests.get(f'http://192.168.9.119:8000/api/v1/boards/{board_id}/columns', headers=headers)
         
         if columns_response.status_code != 200:
             print(f"❌ Failed to get columns: {columns_response.status_code}")
@@ -109,7 +109,7 @@ def test_frontend_integration():
                 'priority': 'medium'
             }
             
-            card_response = requests.post('http://localhost:8000/api/v1/cards/',
+            card_response = requests.post('http://192.168.9.119:8000/api/v1/cards/',
                                         json=card_data, headers=headers)
             
             if card_response.status_code in [200, 201]:
@@ -142,7 +142,7 @@ def test_frontend_integration():
         print("   • kanban-board/index.jsx: Fixed column normalization")
         print()
         print("🌐 READY FOR MANUAL TESTING:")
-        print("   1. Open http://localhost:3000")
+        print("   1. Open http://192.168.9.119:3000")
         print("   2. Login with: owner@agnoworksphere.com / OwnerPass123!")
         print("   3. Navigate to Kanban Board")
         print("   4. Click 'Add Task' or '+' button")

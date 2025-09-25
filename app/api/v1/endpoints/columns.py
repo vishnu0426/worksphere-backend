@@ -2,9 +2,9 @@
 Column management endpoints
 """
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
@@ -103,7 +103,7 @@ async def delete_column(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete column"""
+    """Delete column and move cards to first available column"""
     result = await db.execute(
         select(Column)
         .options(selectinload(Column.board).selectinload(Board.project))
@@ -112,7 +112,7 @@ async def delete_column(
     column = result.scalar_one_or_none()
     if not column:
         raise ResourceNotFoundError("Column not found")
-    
+
     # Check access and permissions
     org_member_result = await db.execute(
         select(OrganizationMember).where(
@@ -123,7 +123,7 @@ async def delete_column(
     org_member = org_member_result.scalar_one_or_none()
     if not org_member:
         raise InsufficientPermissionsError("Access denied")
-    
+
     if org_member.role not in ['member', 'admin', 'owner']:
         raise InsufficientPermissionsError("Insufficient permissions")
 
@@ -144,10 +144,77 @@ async def delete_column(
                 detail="Cannot delete column: Project is pending sign-off approval. Complete the sign-off process first."
             )
 
+    # Get all cards in this column
+    cards_result = await db.execute(
+        select(Card).where(Card.column_id == column_id)
+    )
+    cards_to_move = cards_result.scalars().all()
+
+    # Find the first available column in the same board (excluding the one being deleted)
+    other_columns_result = await db.execute(
+        select(Column)
+        .where(Column.board_id == column.board_id, Column.id != column_id)
+        .order_by(Column.position)
+    )
+    other_columns = other_columns_result.scalars().all()
+
+    if cards_to_move and other_columns:
+        # Move all cards to the first available column
+        target_column = other_columns[0]
+
+        # Get the max position in the target column
+        max_position_result = await db.execute(
+            select(func.max(Card.position)).where(Card.column_id == target_column.id)
+        )
+        max_position = max_position_result.scalar_one_or_none() or 0
+
+        # Move cards and update their status based on target column
+        def get_status_from_column_name(column_name: str) -> str:
+            """Map column name to card status"""
+            column_name_lower = column_name.lower().strip()
+
+            status_mapping = {
+                'to-do': 'todo',
+                'todo': 'todo',
+                'to do': 'todo',
+                'backlog': 'todo',
+                'new': 'todo',
+                'in progress': 'in_progress',
+                'in-progress': 'in_progress',
+                'progress': 'in_progress',
+                'doing': 'in_progress',
+                'active': 'in_progress',
+                'working': 'in_progress',
+                'review': 'in_progress',
+                'testing': 'in_progress',
+                'qa': 'in_progress',
+                'done': 'completed',
+                'complete': 'completed',
+                'completed': 'completed',
+                'finished': 'completed',
+                'closed': 'completed',
+                'resolved': 'completed'
+            }
+
+            return status_mapping.get(column_name_lower, 'todo')
+
+        new_status = get_status_from_column_name(target_column.name)
+
+        for i, card in enumerate(cards_to_move):
+            card.column_id = target_column.id
+            card.position = max_position + i + 1
+            card.status = new_status
+            card.updated_at = func.now()
+
     await db.delete(column)
     await db.commit()
 
-    return {"success": True, "message": "Column deleted successfully"}
+    return {
+        "success": True,
+        "message": "Column deleted successfully",
+        "cards_moved": len(cards_to_move) if cards_to_move else 0,
+        "target_column_id": str(other_columns[0].id) if other_columns and cards_to_move else None
+    }
 
 
 @router.get("/{board_id}/columns", response_model=List[ColumnResponse])

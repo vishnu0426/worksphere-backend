@@ -70,13 +70,13 @@ alembic upgrade head
 python run.py
 ```
 
-The API will be available at `http://localhost:3001`
+The API will be available at `http://192.168.9.119:3001`
 
 ## API Documentation
 
 Once the server is running, you can access:
-- **Swagger UI**: `http://localhost:3001/docs`
-- **ReDoc**: `http://localhost:3001/redoc`
+- **Swagger UI**: `http://192.168.9.119:3001/docs`
+- **ReDoc**: `http://192.168.9.119:3001/redoc`
 
 ## Environment Variables
 
@@ -84,7 +84,7 @@ Key environment variables (see `.env.example` for full list):
 
 ```bash
 # Database
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/agno_worksphere
+DATABASE_URL=postgresql+asyncpg://user:password@192.168.9.119:5432/agno_worksphere
 
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key

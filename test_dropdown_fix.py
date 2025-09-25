@@ -10,7 +10,7 @@ login_data = {
 try:
     # Login
     print('🔐 Testing login...')
-    login_response = requests.post('http://localhost:8000/api/v1/auth/login', 
+    login_response = requests.post('http://192.168.9.119:8000/api/v1/auth/login', 
                                  json=login_data)
     
     if login_response.status_code == 200:
@@ -24,7 +24,7 @@ try:
             }
             
             # Get project and board info
-            projects_response = requests.get('http://localhost:8000/api/v1/projects/', headers=headers)
+            projects_response = requests.get('http://192.168.9.119:8000/api/v1/projects/', headers=headers)
             if projects_response.status_code == 200:
                 projects = projects_response.json()
                 if projects:
@@ -32,7 +32,7 @@ try:
                     project_id = project.get('id')
                     
                     # Get boards
-                    boards_response = requests.get(f'http://localhost:8000/api/v1/projects/{project_id}/boards', headers=headers)
+                    boards_response = requests.get(f'http://192.168.9.119:8000/api/v1/projects/{project_id}/boards', headers=headers)
                     if boards_response.status_code == 200:
                         boards = boards_response.json()
                         if boards:
@@ -40,7 +40,7 @@ try:
                             board_id = board.get('id')
                             
                             # Get columns with detailed info
-                            columns_response = requests.get(f'http://localhost:8000/api/v1/boards/{board_id}/columns', headers=headers)
+                            columns_response = requests.get(f'http://192.168.9.119:8000/api/v1/boards/{board_id}/columns', headers=headers)
                             if columns_response.status_code == 200:
                                 columns = columns_response.json()
                                 
@@ -66,7 +66,7 @@ try:
                                         'priority': 'medium'
                                     }
                                     
-                                    card_response = requests.post('http://localhost:8000/api/v1/cards/',
+                                    card_response = requests.post('http://192.168.9.119:8000/api/v1/cards/',
                                                                 json=card_data, headers=headers)
                                     
                                     if card_response.status_code in [200, 201]:

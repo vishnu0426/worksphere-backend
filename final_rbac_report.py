@@ -83,11 +83,11 @@ class FinalRBACReport:
             import requests
             
             # Test health endpoint
-            response = requests.get("http://localhost:8000/health", timeout=10)
+            response = requests.get("http://192.168.9.119:8000/health", timeout=10)
             health_status = response.status_code == 200
             
             # Test API documentation
-            docs_response = requests.get("http://localhost:8000/docs", timeout=10)
+            docs_response = requests.get("http://192.168.9.119:8000/docs", timeout=10)
             docs_available = docs_response.status_code == 200
             
             self.report_data['server'] = {

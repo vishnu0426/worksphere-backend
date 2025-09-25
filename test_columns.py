@@ -16,7 +16,7 @@ def test_columns():
     
     try:
         print("🔐 Logging in...")
-        login_response = requests.post('http://localhost:8000/api/v1/auth/login', 
+        login_response = requests.post('http://192.168.9.119:8000/api/v1/auth/login', 
                                      json=login_data)
         
         if login_response.status_code == 200:
@@ -30,7 +30,7 @@ def test_columns():
                 }
                 
                 # Get the test project we created
-                projects_response = requests.get('http://localhost:8000/api/v1/projects/',
+                projects_response = requests.get('http://192.168.9.119:8000/api/v1/projects/',
                                                headers=headers)
                 
                 if projects_response.status_code == 200:
@@ -41,7 +41,7 @@ def test_columns():
                         print(f"📁 Project: {project.get('name')} ({project_id})")
                         
                         # Get boards
-                        boards_response = requests.get(f'http://localhost:8000/api/v1/projects/{project_id}/boards',
+                        boards_response = requests.get(f'http://192.168.9.119:8000/api/v1/projects/{project_id}/boards',
                                                      headers=headers)
                         
                         if boards_response.status_code == 200:
@@ -52,7 +52,7 @@ def test_columns():
                                 print(f"📋 Board: {board.get('name')} ({board_id})")
                                 
                                 # Get columns
-                                columns_response = requests.get(f'http://localhost:8000/api/v1/boards/{board_id}/columns',
+                                columns_response = requests.get(f'http://192.168.9.119:8000/api/v1/boards/{board_id}/columns',
                                                               headers=headers)
                                 
                                 if columns_response.status_code == 200:
@@ -78,7 +78,7 @@ def test_columns():
                                         }
                                         
                                         print("🎯 Testing card creation with proper column...")
-                                        card_response = requests.post('http://localhost:8000/api/v1/cards/',
+                                        card_response = requests.post('http://192.168.9.119:8000/api/v1/cards/',
                                                                     json=card_data, headers=headers)
                                         print(f"Card creation status: {card_response.status_code}")
                                         

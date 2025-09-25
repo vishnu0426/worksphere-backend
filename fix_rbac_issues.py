@@ -129,7 +129,7 @@ class EmailService:
     """Email service for sending various types of emails"""
     
     def __init__(self):
-        self.smtp_host = getattr(settings, 'smtp_host', 'localhost')
+        self.smtp_host = getattr(settings, 'smtp_host', '192.168.9.119')
         self.smtp_port = getattr(settings, 'smtp_port', 587)
         self.from_email = getattr(settings, 'from_email', 'noreply@agnoworksphere.com')
         
@@ -241,7 +241,7 @@ async def send_email(to_email: str, subject: str, body: str, html_body: Optional
                 "password": "TestAdmin123!"
             }
             
-            response = requests.post("http://localhost:8000/api/v1/auth/login", json=admin_login, timeout=10)
+            response = requests.post("http://192.168.9.119:8000/api/v1/auth/login", json=admin_login, timeout=10)
             if response.status_code == 200:
                 data = response.json()
                 access_token = data.get("tokens", {}).get("access_token")
@@ -259,7 +259,7 @@ async def send_email(to_email: str, subject: str, body: str, html_body: Optional
                 }
                 
                 response = requests.post(
-                    "http://localhost:8000/api/v1/projects",
+                    "http://192.168.9.119:8000/api/v1/projects",
                     json=project_data,
                     headers=headers,
                     timeout=10

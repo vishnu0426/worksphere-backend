@@ -11,7 +11,7 @@ import time
 from typing import Dict, List
 
 # Configuration
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "http://192.168.9.119:8000"
 
 class RoleValidationTester:
     def __init__(self):

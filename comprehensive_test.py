@@ -151,7 +151,7 @@ def test_frontend_config():
             if os.path.exists(full_path):
                 with open(full_path, 'r') as f:
                     content = f.read()
-                    if "localhost:8000" in content:
+                    if "192.168.9.119:8000" in content:
                         print(f"   ✅ {file_path} - port 8000 configured")
                     else:
                         print(f"   ❌ {file_path} - port 8000 not found")

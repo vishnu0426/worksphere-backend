@@ -33,10 +33,10 @@ def print_banner(mode="development"):
     print("=" * 80)
     print(f"🔧 Mode: {mode.upper()}")
     print(f"📁 Working Directory: {Path(__file__).parent}")
-    print(f"🌐 Server URL: http://localhost:8000")
-    print(f"📖 API Docs: http://localhost:8000/docs")
-    print(f"🔧 Interactive API: http://localhost:8000/redoc")
-    print(f"❤️ Health Check: http://localhost:8000/health")
+    print(f"🌐 Server URL: http://192.168.9.119:8000")
+    print(f"📖 API Docs: http://192.168.9.119:8000/docs")
+    print(f"🔧 Interactive API: http://192.168.9.119:8000/redoc")
+    print(f"❤️ Health Check: http://192.168.9.119:8000/health")
     print("=" * 80)
 
 def print_credentials():

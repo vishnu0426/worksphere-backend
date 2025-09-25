@@ -101,6 +101,7 @@ class KanbanService:
             .options(
                 selectinload(Board.project),
                 selectinload(Board.columns).selectinload(ColumnModel.cards)
+                .selectinload(Card.assignments).selectinload(CardAssignment.user)
             )
             .where(Board.id == board_id)
         )
@@ -147,7 +148,23 @@ class KanbanService:
                             "created_at": card.created_at.isoformat(),
                             "updated_at": card.updated_at.isoformat(),
                             "due_date": card.due_date.isoformat() if card.due_date else None,
-                            "labels": card.labels or []
+                            "labels": card.labels or [],
+                            "assignments": [
+                                {
+                                    "id": str(assignment.id),
+                                    "user_id": str(assignment.user_id),
+                                    "assigned_by": str(assignment.assigned_by) if assignment.assigned_by else None,
+                                    "assigned_at": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                                    "user": {
+                                        "id": str(assignment.user.id),
+                                        "email": assignment.user.email,
+                                        "first_name": assignment.user.first_name,
+                                        "last_name": assignment.user.last_name,
+                                        "full_name": f"{assignment.user.first_name} {assignment.user.last_name}"
+                                    }
+                                }
+                                for assignment in card.assignments
+                            ] if hasattr(card, 'assignments') and card.assignments else []
                         }
                         for card in sorted(col.cards, key=lambda x: x.position)
                     ]
@@ -401,6 +418,36 @@ class KanbanService:
             ]
         }
 
+    def _get_status_from_column_name(self, column_name: str) -> str:
+        """Map column name to card status"""
+        column_name_lower = column_name.lower().strip()
+
+        # Standard column name to status mapping
+        status_mapping = {
+            'to-do': 'todo',
+            'todo': 'todo',
+            'to do': 'todo',
+            'backlog': 'todo',
+            'new': 'todo',
+            'in progress': 'in_progress',
+            'in-progress': 'in_progress',
+            'progress': 'in_progress',
+            'doing': 'in_progress',
+            'active': 'in_progress',
+            'working': 'in_progress',
+            'review': 'in_progress',  # Review is still work in progress
+            'testing': 'in_progress',
+            'qa': 'in_progress',
+            'done': 'completed',
+            'complete': 'completed',
+            'completed': 'completed',
+            'finished': 'completed',
+            'closed': 'completed',
+            'resolved': 'completed'
+        }
+
+        return status_mapping.get(column_name_lower, 'todo')
+
     async def move_card(
         self,
         card_id: str,
@@ -455,9 +502,13 @@ class KanbanService:
             max_position = max_position_result.scalar_one_or_none() or -1
             position = max_position + 1
 
-        # Update card
+        # Update card column, position, and status based on target column
+        old_status = card.status
+        new_status = self._get_status_from_column_name(target_column.name)
+
         card.column_id = target_column_id
         card.position = position
+        card.status = new_status
         card.updated_at = datetime.utcnow()
 
         await self.db.commit()
@@ -467,6 +518,62 @@ class KanbanService:
             "id": str(card.id),
             "column_id": str(card.column_id),
             "position": card.position,
+            "status": card.status,
+            "old_status": old_status,
+            "updated_at": card.updated_at.isoformat()
+        }
+
+    async def get_card(self, card_id: str, user_id: str) -> Dict[str, Any]:
+        """Get a single card with user access verification"""
+
+        # Get card with access verification
+        card_result = await self.db.execute(
+            select(Card)
+            .options(
+                selectinload(Card.column)
+                .selectinload(ColumnModel.board)
+                .selectinload(Board.project),
+                selectinload(Card.assignments).selectinload(CardAssignment.user)
+            )
+            .where(Card.id == card_id)
+        )
+        card = card_result.scalar_one_or_none()
+        if not card:
+            raise ResourceNotFoundError("Card not found")
+
+        # Check user permissions
+        org_member_result = await self.db.execute(
+            select(OrganizationMember).where(
+                OrganizationMember.organization_id == card.column.board.project.organization_id,
+                OrganizationMember.user_id == user_id
+            )
+        )
+        org_member = org_member_result.scalar_one_or_none()
+        if not org_member:
+            raise InsufficientPermissionsError("Access denied")
+
+        return {
+            "id": str(card.id),
+            "column_id": str(card.column_id),
+            "title": card.title,
+            "description": card.description,
+            "priority": card.priority,
+            "due_date": card.due_date.isoformat() if card.due_date else None,
+            "labels": card.labels or [],
+            "assignments": [
+                {
+                    "id": str(assignment.id),
+                    "user_id": str(assignment.user_id),
+                    "user": {
+                        "id": str(assignment.user.id),
+                        "email": assignment.user.email,
+                        "first_name": assignment.user.first_name,
+                        "last_name": assignment.user.last_name
+                    }
+                }
+                for assignment in card.assignments
+            ],
+            "created_at": card.created_at.isoformat(),
             "updated_at": card.updated_at.isoformat()
         }
 
@@ -479,7 +586,8 @@ class KanbanService:
         priority: Optional[str] = None,
         due_date: Optional[datetime] = None,
         labels: Optional[List[Dict[str, Any]]] = None,
-        checklist: Optional[List[Dict[str, Any]]] = None
+        checklist: Optional[List[Dict[str, Any]]] = None,
+        assigned_to: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """Update card details"""
 
@@ -520,6 +628,27 @@ class KanbanService:
         if labels is not None:
             card.labels = labels
 
+        # Handle assignment updates
+        if assigned_to is not None:
+            try:
+                # Delete existing assignments
+                await self.db.execute(delete(CardAssignment).where(CardAssignment.card_id == card.id))
+
+                # Add new assignments
+                for assignee_id in assigned_to:
+                    if assignee_id:  # Skip empty strings
+                        assignment = CardAssignment(
+                            card_id=card.id,
+                            user_id=uuid.UUID(assignee_id) if isinstance(assignee_id, str) else assignee_id,
+                            assigned_by=uuid.UUID(user_id) if isinstance(user_id, str) else user_id,
+                            assigned_at=datetime.utcnow()
+                        )
+                        self.db.add(assignment)
+                        print(f"✅ Added assignment: {assignee_id} to card {card.id}")
+            except Exception as e:
+                print(f"❌ Error updating assignments: {e}")
+                # Continue without failing the entire update
+
         # Handle checklist updates (temporarily disabled to fix 500 error)
         # TODO: Re-enable checklist updates after fixing the database schema issues
         if False and checklist is not None and isinstance(checklist, list):
@@ -549,21 +678,38 @@ class KanbanService:
 
         await self.db.commit()
 
-        # Reload card with checklist items
+        # Reload card with checklist items and assignments
         card_result = await self.db.execute(
             select(Card)
-            .options(selectinload(Card.checklist_items))
+            .options(
+                selectinload(Card.checklist_items),
+                selectinload(Card.assignments).selectinload(CardAssignment.user)
+            )
             .where(Card.id == card_id)
         )
         updated_card = card_result.scalar_one()
 
         return {
             "id": str(updated_card.id),
+            "column_id": str(updated_card.column_id),
             "title": updated_card.title,
             "description": updated_card.description,
             "priority": updated_card.priority,
             "due_date": updated_card.due_date.isoformat() if updated_card.due_date else None,
             "labels": updated_card.labels or [],
+            "assignments": [
+                {
+                    "id": str(assignment.id),
+                    "user_id": str(assignment.user_id),
+                    "user": {
+                        "id": str(assignment.user.id),
+                        "email": assignment.user.email,
+                        "first_name": assignment.user.first_name,
+                        "last_name": assignment.user.last_name
+                    }
+                }
+                for assignment in updated_card.assignments
+            ],
             "checklist_items": [
                 {
                     "id": str(item.id),

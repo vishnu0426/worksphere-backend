@@ -20,7 +20,7 @@ The React frontend codebase has several configuration issues that prevent proper
 
 #### 1. API URL Inconsistencies
 - **File:** `src/tests/frontend-backend-integration-test.js`
-- **Issue:** Still references `http://localhost:3000` instead of `http://localhost:8000`
+- **Issue:** Still references `http://192.168.9.119:3000` instead of `http://192.168.9.119:8000`
 - **Impact:** Integration tests will fail
 - **Fix Required:** Update API_BASE_URL to port 8000
 
@@ -80,7 +80,7 @@ The React frontend codebase has several configuration issues that prevent proper
 1. **Fix Integration Test API URL**
    ```javascript
    // In src/tests/frontend-backend-integration-test.js
-   const API_BASE_URL = 'http://localhost:8000'; // Change from 3000
+   const API_BASE_URL = 'http://192.168.9.119:8000'; // Change from 3000
    ```
 
 2. **Fix Backend Main.py Port**
@@ -92,7 +92,7 @@ The React frontend codebase has several configuration issues that prevent proper
 3. **Create/Verify .env File**
    ```bash
    # In agnoworksphere/agnoworksphere/.env
-   REACT_APP_API_URL=http://localhost:8000
+   REACT_APP_API_URL=http://192.168.9.119:8000
    REACT_APP_NAME=Agno WorkSphere
    REACT_APP_VERSION=1.0.0
    ```

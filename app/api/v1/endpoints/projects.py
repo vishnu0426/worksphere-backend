@@ -14,6 +14,9 @@ from app.core.permissions import can_create_projects, get_user_role_in_organizat
 from app.models.user import User
 from app.models.organization import OrganizationMember
 from app.models.project import Project
+from app.models.board import Board
+from app.models.column import Column
+from app.models.card import Card, CardAssignment
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse, EnhancedProjectCreate, EnhancedProjectResponse
 from app.schemas.auth import UserResponse
 from app.services.organization_service import OrganizationService
@@ -642,21 +645,55 @@ async def get_project_team_members(
     if not has_access:
         raise InsufficientPermissionsError("Access denied to this organization")
 
-    # For now, return all organization members as project team members
-    # In a real implementation, this would filter based on actual project membership
-    org_members_result = await db.execute(
-        select(OrganizationMember, User)
-        .join(User, OrganizationMember.user_id == User.id)
+    # Get actual project team members based on card assignments and project creator
+    # First, get the project creator
+    project_creator_result = await db.execute(
+        select(User, OrganizationMember)
+        .join(OrganizationMember, OrganizationMember.user_id == User.id)
         .where(
             and_(
-                OrganizationMember.organization_id == organization_id,
-                OrganizationMember.status == 'active'
+                User.id == project.created_by,
+                OrganizationMember.organization_id == organization_id
             )
         )
     )
 
     team_members = []
-    for org_member, user in org_members_result.all():
+    project_creator_data = project_creator_result.first()
+    if project_creator_data:
+        user, org_member = project_creator_data
+        user_response = UserResponse(
+            id=str(user.id),
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            is_active=user.is_active,
+            role=org_member.role,
+            created_at=user.created_at,
+            updated_at=user.updated_at
+        )
+        team_members.append(user_response)
+
+    # Get users assigned to cards in this project
+    assigned_members_result = await db.execute(
+        select(User, OrganizationMember)
+        .join(CardAssignment, CardAssignment.user_id == User.id)
+        .join(Card, Card.id == CardAssignment.card_id)
+        .join(Column, Column.id == Card.column_id)
+        .join(Board, Board.id == Column.board_id)
+        .join(OrganizationMember, OrganizationMember.user_id == User.id)
+        .where(
+            and_(
+                Board.project_id == project_id,
+                OrganizationMember.organization_id == organization_id,
+                User.id != project.created_by  # Exclude creator as already added
+            )
+        )
+        .distinct()
+    )
+
+    # Add assigned members to team
+    for user, org_member in assigned_members_result.all():
         user_response = UserResponse(
             id=str(user.id),
             email=user.email,
@@ -670,3 +707,93 @@ async def get_project_team_members(
         team_members.append(user_response)
 
     return team_members
+
+
+@router.get("/{project_id}/stats")
+async def get_project_stats(
+    project_id: str,
+    organization_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get project statistics including member count and task counts"""
+
+    # Verify project exists and user has access
+    project_result = await db.execute(
+        select(Project).where(
+            and_(
+                Project.id == project_id,
+                Project.organization_id == organization_id
+            )
+        )
+    )
+    project = project_result.scalar_one_or_none()
+
+    if not project:
+        raise ResourceNotFoundError("Project not found")
+
+    # Verify user has access to this project
+    rbac = RoleBasedAccessMiddleware()
+    has_access = await rbac.check_organization_access(
+        str(current_user.id), organization_id, db
+    )
+
+    if not has_access:
+        raise InsufficientPermissionsError("Access denied to this organization")
+
+    # Count project team members (creator + assigned users)
+    team_members_count_result = await db.execute(
+        select(User.id)
+        .join(CardAssignment, CardAssignment.user_id == User.id)
+        .join(Card, Card.id == CardAssignment.card_id)
+        .join(Column, Column.id == Card.column_id)
+        .join(Board, Board.id == Column.board_id)
+        .where(Board.project_id == project_id)
+        .distinct()
+    )
+    assigned_members_count = len(team_members_count_result.all())
+
+    # Add 1 for project creator if not already counted
+    creator_assigned_result = await db.execute(
+        select(CardAssignment.id)
+        .join(Card, Card.id == CardAssignment.card_id)
+        .join(Column, Column.id == Card.column_id)
+        .join(Board, Board.id == Column.board_id)
+        .where(
+            and_(
+                Board.project_id == project_id,
+                CardAssignment.user_id == project.created_by
+            )
+        )
+        .limit(1)
+    )
+    creator_has_assignments = creator_assigned_result.scalar_one_or_none() is not None
+    total_members = assigned_members_count + (0 if creator_has_assignments else 1)
+
+    # Count tasks by status
+    task_counts_result = await db.execute(
+        select(Card.status, Card.id)
+        .join(Column, Column.id == Card.column_id)
+        .join(Board, Board.id == Column.board_id)
+        .where(Board.project_id == project_id)
+    )
+
+    task_counts = {"todo": 0, "in_progress": 0, "completed": 0, "total": 0}
+    for status, card_id in task_counts_result.all():
+        task_counts["total"] += 1
+        if status in task_counts:
+            task_counts[status] += 1
+
+    # Calculate pending tasks (todo + in_progress)
+    pending_tasks = task_counts["todo"] + task_counts["in_progress"]
+
+    return {
+        "project_id": project_id,
+        "member_count": total_members,
+        "task_counts": task_counts,
+        "pending_tasks": pending_tasks,
+        "completion_rate": round(
+            (task_counts["completed"] / task_counts["total"] * 100)
+            if task_counts["total"] > 0 else 0, 2
+        )
+    }

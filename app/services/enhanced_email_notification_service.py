@@ -67,7 +67,7 @@ class EnhancedEmailNotificationService:
             
             # Send email notification
             due_date_str = due_date.strftime("%Y-%m-%d") if due_date else None
-            task_url = f"http://localhost:3000/tasks/{task_id}"
+            task_url = f"http://192.168.9.119:3000/tasks/{task_id}"
             
             email_sent = await email_service.send_task_assignment_email(
                 to_email=user.email,
@@ -156,7 +156,7 @@ class EnhancedEmailNotificationService:
             )
             
             # Send email notification
-            task_url = f"http://localhost:3000/tasks/{task_id}"
+            task_url = f"http://192.168.9.119:3000/tasks/{task_id}"
             
             email_sent = await email_service.send_comment_notification_email(
                 to_email=user.email,

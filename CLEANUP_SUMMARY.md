@@ -71,8 +71,8 @@ Fixed the dashboard error: `column "status" does not exist` by adding the missin
 ### 🧪 Test Results
 - **Login**: ✅ Working (`owner@agnotech.com` / `OwnerPass123!`)
 - **Dashboard Stats**: ✅ Working (returns proper role-based data)
-- **Frontend**: ✅ Running on http://localhost:3000
-- **Backend**: ✅ Running on http://localhost:8000
+- **Frontend**: ✅ Running on http://192.168.9.119:3000
+- **Backend**: ✅ Running on http://192.168.9.119:8000
 
 ## 📊 Database Schema
 The Card model now includes:

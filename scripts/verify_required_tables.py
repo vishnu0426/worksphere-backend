@@ -29,7 +29,7 @@ def _load_settings_url() -> str:
     if not db_url and os.getenv("POSTGRES_HOST"):
         user = os.getenv("POSTGRES_USER", "postgres")
         password = os.getenv("POSTGRES_PASSWORD", "postgres")
-        host = os.getenv("POSTGRES_HOST", "localhost")
+        host = os.getenv("POSTGRES_HOST", "192.168.9.119")
         port = os.getenv("POSTGRES_PORT", "5432")
         name = os.getenv("POSTGRES_DB", os.getenv("POSTGRES_DATABASE", "app"))
         db_url = f"postgresql://{user}:{password}@{host}:{port}/{name}"
@@ -109,8 +109,7 @@ def main() -> int:
     if missing:
         print("\nMissing tables (expected but not found):")
         for t in missing:
-            print(f"  - {t}
-")
+            print(f"  - {t}")
     else:
         print("\nNo missing tables detected.")
 

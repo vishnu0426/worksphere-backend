@@ -66,15 +66,22 @@ async def create_notification(
 ):
     """Create a new notification"""
     try:
+        print(f"🔔 Creating notification: {notification_data}")
+
         # Use current user as the target user if not specified or if user doesn't have permission
         target_user_id = notification_data.user_id
 
-        # For now, allow users to create notifications for themselves
-        # In a production system, you might want to restrict this to admin users
-        if target_user_id != current_user.id:
-            # Check if current user has permission to create notifications for others
-            # For simplicity, we'll allow it for now but log it
-            pass
+        # Validate target user exists
+        user_result = await db.execute(
+            select(User).where(User.id == target_user_id)
+        )
+        target_user = user_result.scalar_one_or_none()
+        if not target_user:
+            print(f"❌ Target user not found: {target_user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Target user not found"
+            )
 
         notification = Notification(
             user_id=target_user_id,
@@ -86,15 +93,19 @@ async def create_notification(
             action_url=notification_data.action_url,
             notification_metadata=notification_data.notification_metadata
         )
-        
+
         db.add(notification)
         await db.commit()
         await db.refresh(notification)
-        
+
+        print(f"✅ Notification created successfully: {notification.id}")
         return notification
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
         await db.rollback()
+        print(f"❌ Failed to create notification: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create notification: {str(e)}"
@@ -420,19 +431,35 @@ async def create_in_app_notification(
     db: AsyncSession = Depends(get_db)
 ):
     """Create generic in-app notification"""
+    try:
+        print(f"🔔 Creating in-app notification: {notification_data}")
 
-    service = InAppNotificationService(db)
+        service = InAppNotificationService(db)
 
-    notification = await service.create_in_app_notification(
-        user_id=notification_data.get("user_id", str(current_user.id)),
-        title=notification_data["title"],
-        message=notification_data["message"],
-        category=notification_data["category"],
-        priority=notification_data.get("priority", "normal"),
-        action_buttons=notification_data.get("action_buttons"),
-        organization_id=notification_data.get("organization_id"),
-        action_url=notification_data.get("action_url")
-    )
+        notification = await service.create_in_app_notification(
+            user_id=notification_data.get("user_id", str(current_user.id)),
+            title=notification_data["title"],
+            message=notification_data["message"],
+            category=notification_data["category"],
+            priority=notification_data.get("priority", "normal"),
+            action_buttons=notification_data.get("action_buttons"),
+            organization_id=notification_data.get("organization_id"),
+            action_url=notification_data.get("action_url")
+        )
+
+        print(f"✅ In-app notification created: {notification.id}")
+
+        return {
+            "success": True,
+            "notification_id": str(notification.id),
+            "message": "In-app notification created successfully"
+        }
+    except Exception as e:
+        print(f"❌ Failed to create in-app notification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create notification: {str(e)}"
+        )
 
     return {
         "success": True,

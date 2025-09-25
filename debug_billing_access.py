@@ -15,7 +15,7 @@ async def debug_billing_access():
     print("🔍 DEBUGGING BILLING ACCESS ISSUES")
     print("=" * 60)
     
-    base_url = "http://localhost:8000"
+    base_url = "http://192.168.9.119:8000"
     
     # Test admin billing access
     admin_login = {

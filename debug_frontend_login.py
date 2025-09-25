@@ -11,7 +11,7 @@ def test_frontend_login():
     print("🔍 Debugging Frontend Login Issues")
     print("=" * 40)
     
-    base_url = "http://localhost:8000"
+    base_url = "http://192.168.9.119:8000"
     login_url = f"{base_url}/api/v1/auth/login"
     
     # Test with various credentials that might exist

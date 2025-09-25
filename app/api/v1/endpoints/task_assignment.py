@@ -89,39 +89,81 @@ async def assign_task_to_members(
     
     # Get or create project/board/column if needed
     if not project_id:
-        # Create default project if none specified
-        project = Project(
-            organization_id=organization_id,
-            name=f"Tasks - {title}",
-            description="Auto-created project for task assignment",
-            created_by=current_user.id
+        # Get the first available project for the organization instead of creating a new one
+        project_result = await db.execute(
+            select(Project)
+            .where(Project.organization_id == organization_id)
+            .order_by(Project.created_at.desc())
+            .limit(1)
         )
-        db.add(project)
-        await db.flush()
-        project_id = project.id
-    
+        existing_project = project_result.scalar_one_or_none()
+
+        if existing_project:
+            project_id = existing_project.id
+            print(f"✅ Using existing project: {existing_project.name} ({project_id})")
+        else:
+            # Only create new project if none exists
+            project = Project(
+                organization_id=organization_id,
+                name=f"Default Project",
+                description="Default project for task assignment",
+                created_by=current_user.id
+            )
+            db.add(project)
+            await db.flush()
+            project_id = project.id
+            print(f"✅ Created new project: {project_id}")
+
     if not board_id:
-        # Create default board
-        board = Board(
-            project_id=project_id,
-            name="Task Board",
-            description="Auto-created board for task assignment",
-            created_by=current_user.id
+        # Get or create board for the project
+        board_result = await db.execute(
+            select(Board)
+            .where(Board.project_id == project_id)
+            .order_by(Board.created_at.desc())
+            .limit(1)
         )
-        db.add(board)
-        await db.flush()
-        board_id = board.id
-    
+        existing_board = board_result.scalar_one_or_none()
+
+        if existing_board:
+            board_id = existing_board.id
+            print(f"✅ Using existing board: {existing_board.name} ({board_id})")
+        else:
+            # Create board only if none exists
+            board = Board(
+                project_id=project_id,
+                name="Task Board",
+                description="Default board for task assignment",
+                created_by=current_user.id
+            )
+            db.add(board)
+            await db.flush()
+            board_id = board.id
+            print(f"✅ Created new board: {board_id}")
+
     if not column_id:
-        # Create default column
-        column = Column(
-            board_id=board_id,
-            name="To Do",
-            position=0
+        # Get or create column for the board
+        column_result = await db.execute(
+            select(Column)
+            .where(Column.board_id == board_id)
+            .order_by(Column.position)
+            .limit(1)
         )
-        db.add(column)
-        await db.flush()
-        column_id = column.id
+        existing_column = column_result.scalar_one_or_none()
+
+        if existing_column:
+            column_id = existing_column.id
+            print(f"✅ Using existing column: {existing_column.name} ({column_id})")
+        else:
+            # Create column only if none exists
+            column = Column(
+                board_id=board_id,
+                name="To Do",
+                position=0
+            )
+            db.add(column)
+            await db.flush()
+            column_id = column.id
+            print(f"✅ Created new column: {column_id}")
     
     # Create the task card
     card = Card(
@@ -150,7 +192,43 @@ async def assign_task_to_members(
         db.add(assignment)
     
     await db.commit()
-    
+
+    # Send WebSocket notification for real-time updates
+    try:
+        from app.services.websocket_manager import manager
+
+        # Get project info for WebSocket notification
+        project_result = await db.execute(
+            select(Project).where(Project.id == project_id)
+        )
+        project = project_result.scalar_one_or_none()
+
+        if project:
+            task_update = {
+                "action": "created",
+                "card": {
+                    "id": str(card.id),
+                    "title": card.title,
+                    "description": card.description,
+                    "column_id": str(card.column_id),
+                    "priority": card.priority,
+                    "position": card.position,
+                    "created_by": str(card.created_by),
+                    "created_at": card.created_at.isoformat() if card.created_at else None
+                },
+                "project_id": str(project_id)
+            }
+
+            await manager.broadcast_task_update(
+                task_update=task_update,
+                project_id=str(project_id),
+                exclude_user=str(current_user.id)
+            )
+            print(f"✅ Sent WebSocket notification for task assignment card creation: {card.id}")
+    except Exception as e:
+        print(f"⚠️ Failed to send WebSocket notification: {e}")
+        # Don't fail the card creation if WebSocket fails
+
     # Send notifications to assigned members
     background_tasks.add_task(
         send_enhanced_task_assignment_notifications,

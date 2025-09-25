@@ -18,7 +18,7 @@ sys.path.append(str(Path(__file__).parent))
 class DatabaseSetup:
     def __init__(self):
         self.db_config = {
-            'host': os.getenv('DB_HOST', 'localhost'),
+            'host': os.getenv('DB_HOST', '192.168.9.119'),
             'port': os.getenv('DB_PORT', '5432'),
             'username': os.getenv('DB_USERNAME', 'postgres'),
             'password': os.getenv('DB_PASSWORD', 'admin'),

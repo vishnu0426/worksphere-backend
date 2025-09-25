@@ -223,6 +223,35 @@ class EnhancedNotificationService:
         
         await self.db.commit()
 
+        # Send WebSocket update for real-time dashboard updates
+        try:
+            from app.services.websocket_manager import manager
+
+            # Create project update payload for WebSocket
+            project_update_payload = {
+                "project_id": project_id,
+                "project_name": project.name,
+                "organization_id": str(project.organization_id),
+                "update_type": update_type,
+                "updated_by": updated_by,
+                "updated_by_name": f"{user.first_name} {user.last_name}",
+                "changes": changes,
+                "timestamp": project.updated_at.isoformat() if project.updated_at else None
+            }
+
+            # Broadcast to organization members
+            await manager.broadcast_project_update(
+                project_update=project_update_payload,
+                project_id=project_id,
+                exclude_user=updated_by
+            )
+
+            print(f"📡 WebSocket project update broadcasted for project {project.name} ({update_type})")
+
+        except Exception as e:
+            # Don't fail the notification if WebSocket fails
+            print(f"⚠️ Failed to send WebSocket project update: {e}")
+
     async def send_project_completion_reminder(
         self,
         project_id: str,

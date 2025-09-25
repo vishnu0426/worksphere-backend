@@ -15,7 +15,7 @@ def test_modal_debugging():
     try:
         # Login
         print("🔐 Logging in...")
-        login_response = requests.post('http://localhost:8000/api/v1/auth/login', 
+        login_response = requests.post('http://192.168.9.119:8000/api/v1/auth/login', 
                                      json=login_data)
         
         if login_response.status_code != 200:
@@ -41,7 +41,7 @@ def test_modal_debugging():
         
         # 1. Get projects
         print("\n1. Testing projects endpoint...")
-        projects_response = requests.get('http://localhost:8000/api/v1/projects/', headers=headers)
+        projects_response = requests.get('http://192.168.9.119:8000/api/v1/projects/', headers=headers)
         print(f"   Status: {projects_response.status_code}")
         
         if projects_response.status_code == 200:
@@ -54,7 +54,7 @@ def test_modal_debugging():
                 
                 # 2. Get boards for project
                 print(f"\n2. Testing boards endpoint for project {project_id}...")
-                boards_response = requests.get(f'http://localhost:8000/api/v1/projects/{project_id}/boards', headers=headers)
+                boards_response = requests.get(f'http://192.168.9.119:8000/api/v1/projects/{project_id}/boards', headers=headers)
                 print(f"   Status: {boards_response.status_code}")
                 
                 if boards_response.status_code == 200:
@@ -67,7 +67,7 @@ def test_modal_debugging():
                         
                         # 3. Get columns for board
                         print(f"\n3. Testing columns endpoint for board {board_id}...")
-                        columns_response = requests.get(f'http://localhost:8000/api/v1/boards/{board_id}/columns', headers=headers)
+                        columns_response = requests.get(f'http://192.168.9.119:8000/api/v1/boards/{board_id}/columns', headers=headers)
                         print(f"   Status: {columns_response.status_code}")
                         
                         if columns_response.status_code == 200:
@@ -89,7 +89,7 @@ def test_modal_debugging():
                             
                             # 4. Test team members endpoint
                             print("4. Testing team members endpoint...")
-                            members_response = requests.get(f'http://localhost:8000/api/v1/projects/{project_id}/members', headers=headers)
+                            members_response = requests.get(f'http://192.168.9.119:8000/api/v1/projects/{project_id}/members', headers=headers)
                             print(f"   Status: {members_response.status_code}")
                             
                             if members_response.status_code == 200:

@@ -39,7 +39,7 @@ async def reset_database():
         parsed = urllib.parse.urlparse(db_url)
         
         db_config = {
-            'host': parsed.hostname or 'localhost',
+            'host': parsed.hostname or '192.168.9.119',
             'port': parsed.port or 5432,
             'user': parsed.username or 'postgres',
             'password': parsed.password or 'admin',
@@ -236,7 +236,7 @@ async def verify_database():
         parsed = urllib.parse.urlparse(db_url)
         
         db_config = {
-            'host': parsed.hostname or 'localhost',
+            'host': parsed.hostname or '192.168.9.119',
             'port': parsed.port or 5432,
             'user': parsed.username or 'postgres',
             'password': parsed.password or 'admin',
@@ -295,7 +295,7 @@ async def main():
     print(f"\n🚀 Next Steps:")
     print(f"   1. Start backend: python run.py")
     print(f"   2. Start frontend: npm start")
-    print(f"   3. Begin live testing at: http://localhost:3000")
+    print(f"   3. Begin live testing at: http://192.168.9.119:3000")
 
 if __name__ == "__main__":
     asyncio.run(main())

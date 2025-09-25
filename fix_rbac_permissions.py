@@ -121,7 +121,7 @@ async def test_admin_project_creation_denied():
             "password": "TestAdmin123!"
         }
         
-        response = requests.post("http://localhost:8000/api/v1/auth/login", json=admin_login, timeout=10)
+        response = requests.post("http://192.168.9.119:8000/api/v1/auth/login", json=admin_login, timeout=10)
         if response.status_code != 200:
             print(f"   ❌ Admin login failed: {response.status_code}")
             return False
@@ -139,7 +139,7 @@ async def test_admin_project_creation_denied():
         }
         
         response = requests.post(
-            f"http://localhost:8000/api/v1/projects?organization_id={org_id}",
+            f"http://192.168.9.119:8000/api/v1/projects?organization_id={org_id}",
             json=project_data,
             headers=headers,
             timeout=10
@@ -175,7 +175,7 @@ async def enable_admin_project_creation_as_owner():
             "password": "TestOwner123!"
         }
         
-        response = requests.post("http://localhost:8000/api/v1/auth/login", json=owner_login, timeout=10)
+        response = requests.post("http://192.168.9.119:8000/api/v1/auth/login", json=owner_login, timeout=10)
         if response.status_code != 200:
             print(f"   ❌ Owner login failed: {response.status_code}")
             return False
@@ -194,8 +194,8 @@ async def enable_admin_project_creation_as_owner():
         
         # Try different endpoints for updating organization settings
         endpoints_to_try = [
-            f"http://localhost:8000/api/v1/organizations-enhanced/{org_id}/settings",
-            f"http://localhost:8000/api/v1/organizations/{org_id}/settings"
+            f"http://192.168.9.119:8000/api/v1/organizations-enhanced/{org_id}/settings",
+            f"http://192.168.9.119:8000/api/v1/organizations/{org_id}/settings"
         ]
         
         for endpoint in endpoints_to_try:
@@ -258,7 +258,7 @@ async def test_admin_project_creation_now_allowed():
             "password": "TestAdmin123!"
         }
         
-        response = requests.post("http://localhost:8000/api/v1/auth/login", json=admin_login, timeout=10)
+        response = requests.post("http://192.168.9.119:8000/api/v1/auth/login", json=admin_login, timeout=10)
         if response.status_code != 200:
             print(f"   ❌ Admin login failed: {response.status_code}")
             return False
@@ -276,7 +276,7 @@ async def test_admin_project_creation_now_allowed():
         }
         
         response = requests.post(
-            f"http://localhost:8000/api/v1/projects?organization_id={org_id}",
+            f"http://192.168.9.119:8000/api/v1/projects?organization_id={org_id}",
             json=project_data,
             headers=headers,
             timeout=10

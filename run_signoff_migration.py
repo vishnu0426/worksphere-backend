@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 # Database connection settings
-DATABASE_URL = "postgresql://postgres:admin@localhost:5432/agno_worksphere"
+DATABASE_URL = "postgresql://postgres:admin@192.168.9.119:5432/agno_worksphere"
 
 async def run_signoff_migration():
     """Run the project sign-off migration"""

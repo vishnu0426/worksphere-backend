@@ -26,7 +26,7 @@ async def fix_metadata_column():
     # Extract connection parameters
     parsed = urlparse(database_url)
     
-    db_host = parsed.hostname or "localhost"
+    db_host = parsed.hostname or "192.168.9.119"
     db_port = parsed.port or 5432
     db_name = parsed.path.lstrip('/') if parsed.path else "agno_worksphere"
     db_user = parsed.username or "postgres"

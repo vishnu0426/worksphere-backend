@@ -6,7 +6,7 @@ import requests
 import time
 import statistics
 
-base_url = "http://127.0.0.1:8000"  # Use IP address instead of localhost for better performance
+base_url = "http://127.0.0.1:8000"  # Use IP address instead of 192.168.9.119 for better performance
 
 # Authenticate first
 owner_login = {

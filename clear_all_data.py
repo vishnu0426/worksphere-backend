@@ -99,8 +99,8 @@ async def main():
         return
     
     databases = [
-        ('agno_worksphere', 'postgresql://postgres:admin@localhost:5432/agno_worksphere'),
-        ('test_agnoworksphere', 'postgresql://postgres:admin@localhost:5432/test_agnoworksphere')
+        ('agno_worksphere', 'postgresql://postgres:admin@192.168.9.119:5432/agno_worksphere'),
+        ('test_agnoworksphere', 'postgresql://postgres:admin@192.168.9.119:5432/test_agnoworksphere')
     ]
     
     success_count = 0

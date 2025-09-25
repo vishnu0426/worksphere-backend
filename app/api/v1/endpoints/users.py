@@ -213,21 +213,30 @@ async def update_profile(
     db: AsyncSession = Depends(get_db)
 ):
     """Update user profile"""
+    print(f"🔧 Updating profile for user {current_user.id}")
+    print(f"🔧 Profile data: {profile_data}")
+
     # Merge the user into the current session to ensure it's persistent
     current_user = await db.merge(current_user)
 
     # Update fields if provided
     if profile_data.first_name is not None:
+        print(f"🔧 Updating first_name: {current_user.first_name} -> {profile_data.first_name}")
         current_user.first_name = profile_data.first_name
     if profile_data.last_name is not None:
+        print(f"🔧 Updating last_name: {current_user.last_name} -> {profile_data.last_name}")
         current_user.last_name = profile_data.last_name
     if profile_data.job_title is not None:
+        print(f"🔧 Updating job_title: {current_user.job_title} -> {profile_data.job_title}")
         current_user.job_title = profile_data.job_title
     if profile_data.bio is not None:
+        print(f"🔧 Updating bio: {current_user.bio} -> {profile_data.bio}")
         current_user.bio = profile_data.bio
 
     await db.commit()
     await db.refresh(current_user)
+
+    print(f"✅ Profile updated successfully for user {current_user.id}")
 
     return UserProfile(
         id=current_user.id,

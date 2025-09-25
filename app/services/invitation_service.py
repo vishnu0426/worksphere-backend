@@ -587,7 +587,7 @@ class InvitationService:
         """Send invitation email with appropriate template based on context"""
         try:
             # Create invitation URL
-            invitation_url = f"http://localhost:3000/accept-invitation?token={token}"
+            invitation_url = f"http://192.168.9.119:3000/accept-invitation?token={token}"
             inviter_name = f"{inviter['first_name']} {inviter['last_name']}"
             organization_name = organization['name']
 
@@ -694,7 +694,7 @@ class InvitationService:
                 organization_name=organization.name,
                 role=role,
                 role_permissions=role_permissions,
-                login_url="http://localhost:3000/login",
+                login_url="http://192.168.9.119:3000/login",
                 support_email="support@agnoworksphere.com"
             )
 

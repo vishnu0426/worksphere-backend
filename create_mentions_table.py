@@ -9,7 +9,7 @@ import sys
 import os
 
 # Database URL - update this to match your database configuration
-DATABASE_URL = "postgresql://postgres:Admin@localhost:5432/agno_worksphere"
+DATABASE_URL = "postgresql://postgres:Admin@192.168.9.119:5432/agno_worksphere"
 
 async def create_mentions_table():
     """Create mentions table with proper foreign keys and indexes"""

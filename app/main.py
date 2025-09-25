@@ -57,13 +57,29 @@ if settings.environment == "production":
 
 # Add CORS middleware with proper dev/prod configuration
 logger.info(f"CORS allowed origins: {settings.allowed_origins}")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,  # From config: dev includes localhost:3000
-    allow_credentials=True,  # Allow credentials for authentication
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],  # or explicit: ["Content-Type", "Authorization"]
-)
+logger.info(f"Environment: {settings.environment}")
+
+# More permissive CORS for development
+if settings.environment == "development":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins in development
+        allow_credentials=False,  # Must be False when allow_origins=["*"]
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],  # Allow all headers including Authorization
+        expose_headers=["*"],  # Expose all headers to the client
+        max_age=3600,  # Cache preflight requests for 1 hour
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_origins,  # Use specific origins from settings
+        allow_credentials=True,  # Enable credentials for authentication
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],  # Allow all headers including Authorization
+        expose_headers=["*"],  # Expose all headers to the client
+        max_age=3600,  # Cache preflight requests for 1 hour
+    )
 
 # Add trusted host middleware
 trusted_hosts = os.getenv("TRUSTED_HOSTS", "").split(",")
@@ -145,10 +161,42 @@ async def root():
         "data": {
             "message": "Welcome to Agno WorkSphere API",
             "version": settings.app_version,
-            "environment": settings.environment
+            "environment": settings.environment,
+            "cors_enabled": True
         },
         "timestamp": time.time()
     }
+
+
+@app.get("/test-cors")
+async def test_cors():
+    """Test endpoint for CORS verification"""
+    return {
+        "success": True,
+        "data": {
+            "message": "CORS is working!",
+            "environment": settings.environment,
+            "allowed_origins": settings.allowed_origins if settings.environment != "development" else ["*"]
+        },
+        "timestamp": time.time()
+    }
+
+
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    """Global OPTIONS handler for CORS preflight requests"""
+    from fastapi import Response
+    response = Response()
+    if settings.environment == "development":
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "false"
+    else:
+        response.headers["Access-Control-Allow-Origin"] = "http://192.168.9.119:3000"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    response.headers["Access-Control-Max-Age"] = "3600"
+    return response
 
 
 @app.get("/health")

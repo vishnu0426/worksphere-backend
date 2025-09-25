@@ -102,9 +102,8 @@ async def get_owner_dashboard(
             func.count(Project.id.distinct()).label('total_projects'),
             func.count(OrganizationMember.id.distinct()).label('total_members'),
             func.count(Card.id.distinct()).label('total_tasks'),
-            func.count(Card.id.distinct()).filter(
-                func.lower(Column.name).in_(['done', 'completed', 'finished'])
-            ).label('completed_tasks'),
+            func.count(Card.id.distinct()).filter(Card.status == 'completed').label('completed_tasks'),
+            func.count(Card.id.distinct()).filter(Card.status.in_(['todo', 'in_progress'])).label('pending_tasks'),
             func.count(MeetingSchedule.id.distinct()).label('total_meetings')
         )
         .select_from(Organization)
@@ -149,6 +148,7 @@ async def get_owner_dashboard(
             'total_members': stats.total_members if stats else 0,
             'total_tasks': stats.total_tasks if stats else 0,
             'completed_tasks': stats.completed_tasks if stats else 0,
+            'pending_tasks': stats.pending_tasks if stats else 0,
             'total_meetings': stats.total_meetings if stats else 0,
             'completion_rate': round((stats.completed_tasks / stats.total_tasks * 100) if stats and stats.total_tasks > 0 else 0, 2)
         },
@@ -212,6 +212,7 @@ async def get_admin_dashboard(
                 func.count(Project.id.distinct()).label('accessible_projects'),
                 func.count(Card.id.distinct()).label('total_tasks'),
                 func.count(Card.id.distinct()).filter(Card.status == 'completed').label('completed_tasks'),
+                func.count(Card.id.distinct()).filter(Card.status.in_(['todo', 'in_progress'])).label('pending_tasks'),
                 func.count(Card.id.distinct()).filter(CardAssignment.user_id == current_user.id).label('my_tasks')
             )
             .select_from(Project)
@@ -257,7 +258,7 @@ async def get_admin_dashboard(
             'total_members': total_members,
             'total_tasks': stats.total_tasks if stats else 0,
             'completed_tasks': stats.completed_tasks if stats else 0,
-            'pending_tasks': (stats.total_tasks - stats.completed_tasks) if stats and stats.total_tasks and stats.completed_tasks else 0,
+            'pending_tasks': stats.pending_tasks if stats else 0,
             'my_tasks': stats.my_tasks if stats else 0,
             'completion_rate': round((stats.completed_tasks / stats.total_tasks * 100) if stats and stats.total_tasks > 0 else 0, 2)
         },
@@ -434,6 +435,7 @@ async def get_dashboard_stats(
                 func.count(Project.id.distinct()).label('projects'),
                 func.count(Card.id.distinct()).label('tasks'),
                 func.count(Card.id.distinct()).filter(Card.status == 'completed').label('completed'),
+                func.count(Card.id.distinct()).filter(Card.status.in_(['todo', 'in_progress'])).label('pending'),
                 func.count(Card.id.distinct()).filter(CardAssignment.user_id == current_user.id).label('my_tasks')
             )
             .select_from(Project)

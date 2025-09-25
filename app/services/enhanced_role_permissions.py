@@ -308,17 +308,19 @@ class EnhancedRolePermissions:
     async def get_accessible_projects(self, user_id: str, organization_id: str) -> List[str]:
         """Get list of project IDs user can access"""
         role = await self.get_user_role(user_id, organization_id)
-        
-        if role in ['owner', 'admin']:
+
+        if role in ['owner', 'admin', 'member']:
             # Can access all projects in organization
+            # Members should be able to see all projects in their organization
+            # to participate in project management and collaboration
             result = await self.db.execute(
                 select(Project.id)
                 .where(Project.organization_id == organization_id)
             )
             return [str(project_id) for project_id in result.scalars().all()]
-        
-        elif role in ['member', 'viewer']:
-            # Can only access assigned projects
+
+        elif role == 'viewer':
+            # Viewers can only access projects where they have been specifically assigned to cards
             result = await self.db.execute(
                 select(Project.id)
                 .join(Board, Board.project_id == Project.id)
@@ -334,7 +336,7 @@ class EnhancedRolePermissions:
                 .distinct()
             )
             return [str(project_id) for project_id in result.scalars().all()]
-        
+
         return []
 
     async def _check_conditional_permission(

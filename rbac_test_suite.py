@@ -54,7 +54,7 @@ class RBACTestSuite:
         self.test_results: List[TestResult] = []
         self.test_users: Dict[str, TestUser] = {}
         self.test_organizations: List[TestOrganization] = []
-        self.base_url = "http://localhost:8000"
+        self.base_url = "http://192.168.9.119:8000"
         
         # Permission Matrix - Expected permissions for each role
         self.permission_matrix = {

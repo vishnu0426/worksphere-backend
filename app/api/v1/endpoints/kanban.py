@@ -3,8 +3,10 @@ Comprehensive Kanban Board API Endpoints
 Handles all board, column, and card operations
 """
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -12,6 +14,8 @@ from app.core.database import get_db
 from app.core.deps import get_current_active_user
 from app.core.exceptions import ResourceNotFoundError, InsufficientPermissionsError
 from app.models.user import User
+from app.models.board import Board
+from app.models.column import Column as ColumnModel
 from app.services.kanban_service import KanbanService
 
 router = APIRouter()
@@ -53,6 +57,7 @@ class CardUpdate(BaseModel):
     priority: Optional[str] = None
     due_date: Optional[datetime] = None
     labels: Optional[List[dict]] = None
+    assigned_to: Optional[List[str]] = None
 
 class CardMove(BaseModel):
     target_column_id: str
@@ -195,6 +200,7 @@ async def get_column_cards(
 async def create_card(
     column_id: str,
     card_data: CardCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -203,7 +209,7 @@ async def create_card(
         print(f"🔧 Creating card in column {column_id}")
         print(f"🔧 Card data: {card_data}")
         print(f"🔧 User: {current_user.email}")
-        
+
         kanban_service = KanbanService(db)
         card = await kanban_service.create_card(
             column_id=column_id,
@@ -215,6 +221,41 @@ async def create_card(
             due_date=card_data.due_date,
             labels=card_data.labels
         )
+
+        # Send email notifications to assigned members
+        if card_data.assigned_to:
+            # Get column and project info for email context
+            column_result = await db.execute(
+                select(ColumnModel)
+                .options(
+                    selectinload(ColumnModel.board).selectinload(Board.project)
+                )
+                .where(ColumnModel.id == column_id)
+            )
+            column = column_result.scalar_one_or_none()
+
+            if column and column.board and column.board.project:
+                project_name = column.board.project.name
+                organization_id = str(column.board.project.organization_id)
+
+                # Import email notification service
+                from app.services.enhanced_email_notification_service import get_enhanced_notification_service
+                enhanced_service = get_enhanced_notification_service(db)
+
+                # Send notifications to each assigned user
+                for user_id in card_data.assigned_to:
+                    background_tasks.add_task(
+                        enhanced_service.send_task_assignment_notification,
+                        user_id=user_id,
+                        task_id=str(card["id"]),
+                        task_title=card["title"],
+                        task_description=card["description"] or "",
+                        assigner_id=str(current_user.id),
+                        project_name=project_name,
+                        organization_id=organization_id,
+                        due_date=card_data.due_date,
+                        priority=card_data.priority or "medium"
+                    )
         
         print(f"✅ Card created successfully: {card['id']}")
         
@@ -285,6 +326,7 @@ async def move_card(
 async def update_card(
     card_id: str,
     card_data: CardUpdate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -294,6 +336,11 @@ async def update_card(
         print(f"🔧 Card data: {card_data}")
 
         kanban_service = KanbanService(db)
+
+        # Get current card assignments before update for comparison
+        current_card = await kanban_service.get_card(card_id, str(current_user.id))
+        current_assignments = set(assignment.get('user_id') for assignment in current_card.get('assignments', []))
+
         card = await kanban_service.update_card(
             card_id=card_id,
             user_id=str(current_user.id),
@@ -301,12 +348,50 @@ async def update_card(
             description=card_data.description,
             priority=card_data.priority,
             due_date=card_data.due_date,
-            labels=card_data.labels
+            labels=card_data.labels,
+            assigned_to=card_data.assigned_to
             # checklist=card_data.checklist  # Temporarily disabled
         )
 
         print(f"✅ Card updated successfully: {card}")
-        
+
+        # Send email notifications for new assignments
+        if card_data.assigned_to:
+            new_assignments = set(card_data.assigned_to) - current_assignments
+            if new_assignments:
+                # Get card and project info for email context
+                card_result = await db.execute(
+                    select(ColumnModel)
+                    .options(
+                        selectinload(ColumnModel.board).selectinload(Board.project)
+                    )
+                    .where(ColumnModel.id == card.get('column_id'))
+                )
+                column = card_result.scalar_one_or_none()
+
+                if column and column.board and column.board.project:
+                    project_name = column.board.project.name
+                    organization_id = str(column.board.project.organization_id)
+
+                    # Import email notification service
+                    from app.services.enhanced_email_notification_service import get_enhanced_notification_service
+                    enhanced_service = get_enhanced_notification_service(db)
+
+                    # Send notifications to newly assigned users
+                    for user_id in new_assignments:
+                        background_tasks.add_task(
+                            enhanced_service.send_task_assignment_notification,
+                            user_id=user_id,
+                            task_id=str(card["id"]),
+                            task_title=card["title"],
+                            task_description=card["description"] or "",
+                            assigner_id=str(current_user.id),
+                            project_name=project_name,
+                            organization_id=organization_id,
+                            due_date=card_data.due_date,
+                            priority=card_data.priority or "medium"
+                        )
+
         return {
             "success": True,
             "data": card,

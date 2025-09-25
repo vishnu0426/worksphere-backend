@@ -18,7 +18,7 @@ async def run_migration():
     if not database_url:
         raise ValueError("DATABASE_URL not found in environment variables")
 
-    # Parse the URL: postgresql+asyncpg://postgres:Admin@localhost:5432/agno_worksphere
+    # Parse the URL: postgresql+asyncpg://postgres:Admin@192.168.9.119:5432/agno_worksphere
     # Remove the +asyncpg part for asyncpg connection
     if "+asyncpg://" in database_url:
         database_url = database_url.replace("+asyncpg://", "://")
@@ -27,7 +27,7 @@ async def run_migration():
     from urllib.parse import urlparse
     parsed = urlparse(database_url)
 
-    db_host = parsed.hostname or "localhost"
+    db_host = parsed.hostname or "192.168.9.119"
     db_port = parsed.port or 5432
     db_name = parsed.path.lstrip('/') if parsed.path else "agno_worksphere"
     db_user = parsed.username or "postgres"

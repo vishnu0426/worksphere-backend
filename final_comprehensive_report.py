@@ -19,7 +19,7 @@ async def generate_final_comprehensive_report():
     print("=" * 80)
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    base_url = "http://localhost:8000"
+    base_url = "http://192.168.9.119:8000"
     
     # Test server health
     try:
@@ -32,7 +32,7 @@ async def generate_final_comprehensive_report():
     
     print(f"📅 Report Generated: {timestamp}")
     print(f"🌐 Backend URL: {base_url}")
-    print(f"🔗 Frontend URL: http://localhost:3000 (configured)")
+    print(f"🔗 Frontend URL: http://192.168.9.119:3000 (configured)")
     
     # Executive Summary
     print(f"\n📋 EXECUTIVE SUMMARY")

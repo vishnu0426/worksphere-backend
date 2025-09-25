@@ -125,7 +125,7 @@ async def test_email_templates():
             role="member",
             to_email="test@example.com",
             temp_password="temp123",
-            invitation_url="http://localhost:3000/accept-invitation?token=abc123",
+            invitation_url="http://192.168.9.119:3000/accept-invitation?token=abc123",
             custom_message="Welcome to our team!"
         )
         print(f"✅ Organization template generated: {len(org_html)} chars HTML, {len(org_text)} chars text")
@@ -138,7 +138,7 @@ async def test_email_templates():
             role="admin",
             to_email="test@example.com",
             temp_password="temp456",
-            invitation_url="http://localhost:3000/accept-invitation?token=def456"
+            invitation_url="http://192.168.9.119:3000/accept-invitation?token=def456"
         )
         print(f"✅ Project template generated: {len(proj_html)} chars HTML, {len(proj_text)} chars text")
         
@@ -151,7 +151,7 @@ async def test_email_templates():
             role="viewer",
             to_email="test@example.com",
             temp_password="temp789",
-            invitation_url="http://localhost:3000/accept-invitation?token=ghi789"
+            invitation_url="http://192.168.9.119:3000/accept-invitation?token=ghi789"
         )
         print(f"✅ Board template generated: {len(board_html)} chars HTML, {len(board_text)} chars text")
         

@@ -18,7 +18,7 @@ async def setup_postgresql_database():
     print("=" * 50)
     
     # Database configuration
-    DB_HOST = "localhost"
+    DB_HOST = "192.168.9.119"
     DB_PORT = 5432
     DB_USER = "postgres"
     DB_PASSWORD = "admin"

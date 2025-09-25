@@ -20,8 +20,8 @@ async def generate_comprehensive_test_report():
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"📅 Report Generated: {timestamp}")
-    print(f"🌐 Backend URL: http://localhost:8000")
-    print(f"🖥️ Frontend URL: http://localhost:3000")
+    print(f"🌐 Backend URL: http://192.168.9.119:8000")
+    print(f"🖥️ Frontend URL: http://192.168.9.119:3000")
     print(f"💾 Database: PostgreSQL (username: postgres, password: admin)")
     
     # Executive Summary

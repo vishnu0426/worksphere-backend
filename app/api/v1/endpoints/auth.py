@@ -137,7 +137,7 @@ async def register(
             user.email,
             f"{user.first_name} {user.last_name}",
             organization.name,
-            "http://localhost:3000/login"
+            "http://192.168.9.119:3000/login"
         )
 
         return AuthResponse(
@@ -560,7 +560,7 @@ async def send_password_reset_email(email: str, first_name: str, reset_token: st
         email_service = EmailService()
 
         # Create reset URL
-        reset_url = f"http://localhost:3000/reset-password?token={reset_token}"
+        reset_url = f"http://192.168.9.119:3000/reset-password?token={reset_token}"
 
         # Create email content
         subject = "Reset Your Password - Agno WorkSphere"

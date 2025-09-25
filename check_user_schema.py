@@ -8,7 +8,7 @@ import asyncpg
 async def check_user_schema():
     """Check user table schema"""
     try:
-        conn = await asyncpg.connect('postgresql://postgres:admin@localhost:5432/agno_worksphere_test')
+        conn = await asyncpg.connect('postgresql://postgres:admin@192.168.9.119:5432/agno_worksphere_test')
         
         # Check users table columns
         result = await conn.fetch("""

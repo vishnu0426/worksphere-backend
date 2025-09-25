@@ -18,7 +18,7 @@ async def debug_registration_error():
     print("🔍 DEBUGGING USER REGISTRATION 500 ERROR")
     print("=" * 60)
     
-    base_url = "http://localhost:8000"
+    base_url = "http://192.168.9.119:8000"
     
     # Test registration with various scenarios
     test_cases = [

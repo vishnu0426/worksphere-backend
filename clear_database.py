@@ -39,7 +39,7 @@ async def clear_all_data():
         parsed = urllib.parse.urlparse(db_url)
         
         db_config = {
-            'host': parsed.hostname or 'localhost',
+            'host': parsed.hostname or '192.168.9.119',
             'port': parsed.port or 5432,
             'user': parsed.username or 'postgres',
             'password': parsed.password or 'admin',
@@ -234,7 +234,7 @@ async def verify_clearing():
         parsed = urllib.parse.urlparse(db_url)
         
         db_config = {
-            'host': parsed.hostname or 'localhost',
+            'host': parsed.hostname or '192.168.9.119',
             'port': parsed.port or 5432,
             'user': parsed.username or 'postgres',
             'password': parsed.password or 'admin',

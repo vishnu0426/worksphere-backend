@@ -21,7 +21,15 @@ class EmailService:
         self.smtp_user = settings.smtp_user
         self.smtp_pass = settings.smtp_pass
         self.from_email = settings.from_email
-        self.from_name = getattr(settings, 'from_name', 'Agno WorkSphere')
+        self.from_name = settings.from_name
+
+        # Debug SMTP configuration
+        logger.info(f"📧 Email Service Initialized:")
+        logger.info(f"   SMTP Host: {self.smtp_host}")
+        logger.info(f"   SMTP Port: {self.smtp_port}")
+        logger.info(f"   SMTP User: {self.smtp_user[:5]}***" if self.smtp_user else "   SMTP User: Not configured")
+        logger.info(f"   From Email: {self.from_email}")
+        logger.info(f"   From Name: {self.from_name}")
     
     async def send_email(
         self,
@@ -87,7 +95,7 @@ class EmailService:
         user_email: str,
         user_name: str,
         organization_name: str,
-        login_url: str = "http://localhost:3000/login"
+        login_url: str = "http://192.168.9.119:3000/login"
     ) -> bool:
         """Send welcome email to new user"""
         subject = f"Welcome to {organization_name} - Your Agno WorkSphere Account is Ready!"
@@ -518,7 +526,7 @@ class EmailService:
                     ''' if tech_stack else ''}
 
                     <div style="text-align: center;">
-                        <a href="http://localhost:3000/projects" class="cta-button">View Your Project Now</a>
+                        <a href="http://192.168.9.119:3000/projects" class="cta-button">View Your Project Now</a>
                     </div>
 
                     <div class="next-steps">
@@ -566,7 +574,7 @@ class EmailService:
         3. Set up your Kanban board
         4. Track progress
 
-        View your project: http://localhost:3000/projects
+        View your project: http://192.168.9.119:3000/projects
 
         Need help? Contact support@agnoworksphere.com
 
@@ -974,7 +982,7 @@ class EmailService:
         project_name: str,
         due_date: Optional[str] = None,
         priority: str = "medium",
-        task_url: str = "http://localhost:3000/tasks"
+        task_url: str = "http://192.168.9.119:3000/tasks"
     ) -> bool:
         """Send task assignment notification email"""
         subject = f"📋 New Task Assigned: {task_title}"
@@ -1063,7 +1071,7 @@ class EmailService:
         task_title: str,
         comment_content: str,
         project_name: str,
-        task_url: str = "http://localhost:3000/tasks"
+        task_url: str = "http://192.168.9.119:3000/tasks"
     ) -> bool:
         """Send comment notification email"""
         subject = f"💬 New Comment on {task_title}"
@@ -1345,7 +1353,7 @@ async def send_welcome_email(
     user_email: str,
     user_name: str,
     organization_name: str,
-    login_url: str = "http://localhost:3000/login"
+    login_url: str = "http://192.168.9.119:3000/login"
 ) -> bool:
     """Send welcome email to new user"""
     return await email_service.send_welcome_email(

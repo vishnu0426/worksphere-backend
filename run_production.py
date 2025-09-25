@@ -71,7 +71,7 @@ class ProductionServer:
             # Check port availability
             import socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex(('localhost', 8000))
+            result = sock.connect_ex(('192.168.9.119', 8000))
             sock.close()
             
             if result == 0:
@@ -111,9 +111,9 @@ class ProductionServer:
         print(f"   Database: {settings.database_url.split('@')[-1] if '@' in settings.database_url else 'Local'}")
         print(f"   Startup Time: {uptime:.2f}s")
         print("-" * 80)
-        print("   📊 API Documentation: http://localhost:8000/docs")
-        print("   🔍 Health Check: http://localhost:8000/health")
-        print("   📈 Metrics: http://localhost:8000/metrics")
+        print("   📊 API Documentation: http://192.168.9.119:8000/docs")
+        print("   🔍 Health Check: http://192.168.9.119:8000/health")
+        print("   📈 Metrics: http://192.168.9.119:8000/metrics")
         print("-" * 80)
         print("   🔐 Security: JWT Authentication Enabled")
         print("   🛡️ RBAC: Role-Based Access Control Active")

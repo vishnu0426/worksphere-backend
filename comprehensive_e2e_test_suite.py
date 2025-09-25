@@ -19,8 +19,8 @@ class ComprehensiveE2ETestSuite:
     """Comprehensive End-to-End Testing Suite"""
     
     def __init__(self):
-        self.base_url = "http://localhost:8000"
-        self.frontend_url = "http://localhost:3000"
+        self.base_url = "http://192.168.9.119:8000"
+        self.frontend_url = "http://192.168.9.119:3000"
         self.test_results = {
             "phase1_backend": [],
             "phase2_frontend": [],

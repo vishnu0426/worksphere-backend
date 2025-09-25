@@ -16,7 +16,7 @@ def create_test_project():
     
     try:
         print("🔐 Logging in...")
-        login_response = requests.post('http://localhost:8000/api/v1/auth/login', 
+        login_response = requests.post('http://192.168.9.119:8000/api/v1/auth/login', 
                                      json=login_data)
         
         if login_response.status_code == 200:
@@ -39,7 +39,7 @@ def create_test_project():
                 }
 
                 print("📁 Creating project...")
-                project_response = requests.post(f'http://localhost:8000/api/v1/projects/?organization_id={organization_id}',
+                project_response = requests.post(f'http://192.168.9.119:8000/api/v1/projects/?organization_id={organization_id}',
                                                json=project_data, headers=headers)
                 print(f'Project creation status: {project_response.status_code}')
                 
@@ -57,7 +57,7 @@ def create_test_project():
                         }
                         
                         print("📋 Creating board...")
-                        board_response = requests.post(f'http://localhost:8000/api/v1/projects/{project_id}/boards',
+                        board_response = requests.post(f'http://192.168.9.119:8000/api/v1/projects/{project_id}/boards',
                                                      json=board_data, headers=headers)
                         print(f'Board creation status: {board_response.status_code}')
                         
@@ -78,7 +78,7 @@ def create_test_project():
                                 print("📊 Creating columns...")
                                 created_columns = []
                                 for column_data in columns_to_create:
-                                    column_response = requests.post(f'http://localhost:8000/api/v1/boards/{board_id}/columns',
+                                    column_response = requests.post(f'http://192.168.9.119:8000/api/v1/boards/{board_id}/columns',
                                                                   json=column_data, headers=headers)
                                     print(f'Column "{column_data["name"]}" creation status: {column_response.status_code}')
                                     
@@ -105,7 +105,7 @@ def create_test_project():
                                     }
                                     
                                     print("\n🎯 Testing card creation...")
-                                    card_response = requests.post('http://localhost:8000/api/v1/cards/',
+                                    card_response = requests.post('http://192.168.9.119:8000/api/v1/cards/',
                                                                 json=card_data, headers=headers)
                                     print(f'Card creation status: {card_response.status_code}')
                                     
